@@ -1,4 +1,4 @@
-package org.example.models;
+package org.example.review.engine.models;
 
 import lombok.AllArgsConstructor;
 

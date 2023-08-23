@@ -1,8 +1,8 @@
-package org.example.services;
+package org.example.review.engine.services;
 
 import org.example.product.models.Product;
-import org.example.models.Review;
-import org.example.models.ReviewSummary;
+import org.example.review.engine.models.Review;
+import org.example.review.engine.models.ReviewSummary;
 import org.springframework.stereotype.Service;
 
 @Service

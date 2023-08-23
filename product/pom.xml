@@ -9,7 +9,9 @@
         <version>0.0.01-SNAPSHOT</version>
     </parent>
 
+    <groupId>org.example</groupId>
     <artifactId>product</artifactId>
+    <version>0.0.02-SNAPSHOT</version>
 
 
     <dependencies>

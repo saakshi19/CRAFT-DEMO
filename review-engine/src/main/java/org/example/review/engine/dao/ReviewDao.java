@@ -1,10 +1,9 @@
-package org.example.dao;
+package org.example.review.engine.dao;
 
-import org.example.models.Review;
+import org.example.review.engine.models.Review;
 import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Repository

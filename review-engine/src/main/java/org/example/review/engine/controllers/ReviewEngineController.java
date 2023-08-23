@@ -1,7 +1,7 @@
-package org.example.controllers;
+package org.example.review.engine.controllers;
 
-import org.example.models.Review;
-import org.example.services.ReviewEngineService;
+import org.example.review.engine.models.Review;
+import org.example.review.engine.services.ReviewEngineService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

@@ -1,7 +1,7 @@
-package org.example.dao;
+package org.example.review.engine.dao;
 
-import org.example.models.Review;
-import org.example.models.ReviewSummary;
+import org.example.review.engine.models.Review;
+import org.example.review.engine.models.ReviewSummary;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;

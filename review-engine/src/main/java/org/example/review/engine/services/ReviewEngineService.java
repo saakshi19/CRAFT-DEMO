@@ -1,11 +1,11 @@
-package org.example.services;
+package org.example.review.engine.services;
 
-import org.example.dao.ProductReviewDao;
-import org.example.dao.ReviewDao;
-import org.example.dao.UserReviewDao;
 import org.example.product.models.Product;
-import org.example.models.Review;
-import org.example.models.ReviewSummary;
+import org.example.review.engine.dao.ProductReviewDao;
+import org.example.review.engine.dao.ReviewDao;
+import org.example.review.engine.dao.UserReviewDao;
+import org.example.review.engine.models.Review;
+import org.example.review.engine.models.ReviewSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

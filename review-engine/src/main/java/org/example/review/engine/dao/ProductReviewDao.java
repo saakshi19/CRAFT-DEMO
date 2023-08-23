@@ -1,5 +1,6 @@
 package org.example.review.engine.dao;
 
+import org.example.review.engine.models.Product;
 import org.example.review.engine.models.Review;
 import org.example.review.engine.models.ReviewSummary;
 import org.springframework.stereotype.Repository;
@@ -43,5 +44,18 @@ public class ProductReviewDao {
 
     public void addOrUpdateProductReviewSummary(Long productId, ReviewSummary reviewSummary) {
         productReviewSummary.put(productId, reviewSummary);
+    }
+
+    public void addFirstReviewSummary(Product product, Review review) {
+        ReviewSummary reviewSummary = new ReviewSummary(
+                review.getProductId(),
+                review.getOverallRating(),
+                1L,
+                null,
+                review.getReviewRegion(),
+                0,
+                0
+        );
+        productReviewSummary.put(review.getProductId(), reviewSummary);
     }
 }

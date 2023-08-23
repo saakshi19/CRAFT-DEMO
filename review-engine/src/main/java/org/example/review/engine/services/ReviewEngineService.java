@@ -1,6 +1,7 @@
 package org.example.review.engine.services;
 
-import org.example.product.models.Product;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.review.engine.models.Product;
 import org.example.review.engine.dao.ProductReviewDao;
 import org.example.review.engine.dao.ReviewDao;
 import org.example.review.engine.dao.UserReviewDao;
@@ -10,6 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import io.netty.resolver.dns.macos.*;
+import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
 import java.util.List;
 import java.util.UUID;
@@ -63,23 +67,35 @@ public class ReviewEngineService {
                 logger.info("Trying to connect to product service");
 
                 WebClient webClient = WebClient.builder().build();
-                product = webClient.get()
+
+                String productResponseString = webClient.get()
                         .uri("http://localhost:8082/product/v1/" + productId)
                         .retrieve()
-                        .bodyToMono(Product.class)
+                        .bodyToMono(String.class)
                         .block();
-                logger.info("Got product " + product);
+                logger.info(productResponseString);
+
+                ObjectMapper objectMapper = new ObjectMapper();
+                product = objectMapper.readValue(productResponseString, Product.class);
+
+                logger.info("Product is " + product);
+                logger.info("Product name is " + product.getName());
 
             } catch (Exception ex) {
-                logger.info("Failed to get product with id " + productId);
+                logger.info("Failed to get product with id " + productId + "due to " + ex.getMessage());
             }
 
             ReviewSummary reviewSummary = productReviewDao.getProductReviewSummary(productId);
-            ReviewSummary revisedReviewSummary = reviewCalculator.calculateReview(product, review, reviewSummary);
-            productReviewDao.addOrUpdateProductReviewSummary(productId, revisedReviewSummary);
+            if (reviewSummary == null) {
+                productReviewDao.addFirstReviewSummary(product, review);
+            } else {
+                ReviewSummary revisedReviewSummary = reviewCalculator.calculateReview(product, review, reviewSummary);
+                productReviewDao.addOrUpdateProductReviewSummary(productId, revisedReviewSummary);
+            }
             // TODO: Refresh Cache with this value
             return "Thank you for your review!";
         } catch (Exception ex) {
+            logger.error("due to " + ex.getMessage());
             return "Something went wrong. Please try again!";
         }
     }
@@ -97,5 +113,9 @@ public class ReviewEngineService {
 
     public List<Review> getReviewsForUser(String userEmailId) {
         return userReviewDao.getReviews(userEmailId);
+    }
+
+    public ReviewSummary getReviewSummaryForProduct(Long productId) {
+        return productReviewDao.getProductReviewSummary(productId);
     }
 }

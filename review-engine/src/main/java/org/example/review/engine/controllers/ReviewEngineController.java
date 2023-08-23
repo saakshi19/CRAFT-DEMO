@@ -1,6 +1,7 @@
 package org.example.review.engine.controllers;
 
 import org.example.review.engine.models.Review;
+import org.example.review.engine.models.ReviewSummary;
 import org.example.review.engine.services.ReviewEngineService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -70,6 +71,17 @@ public class ReviewEngineController {
             @PathVariable("userEmailId") final String userEmailId
     ) {
         return ResponseEntity.ok(reviewEngineService.getReviewsForUser(userEmailId));
+    }
+
+    @RequestMapping(
+            value = "/reviewSummary/{productId}",
+            method = RequestMethod.GET,
+            produces = {MediaType.APPLICATION_JSON_VALUE})
+    @ResponseBody
+    ResponseEntity<ReviewSummary> getReviewsForUser(
+            @PathVariable("productId") final Long productId
+    ) {
+        return ResponseEntity.ok(reviewEngineService.getReviewSummaryForProduct(productId));
     }
 
     // TODO: Add upvotes and downvotes to reviews

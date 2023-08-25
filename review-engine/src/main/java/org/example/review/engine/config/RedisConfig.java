@@ -9,13 +9,6 @@ import java.time.Duration;
 
 @Configuration
 public class RedisConfig {
-
-//    private final JupiterConfig jupiterConfig;
-
-//    public RedisConfig(JupiterConfig jupiterConfig) {
-//        this.jupiterConfig = jupiterConfig;
-//    }
-
     @Bean
     public StatefulRedisConnection<String, String> redisConnection() {
         RedisClient redisClient = RedisClient.create("redis://localhost:6379");

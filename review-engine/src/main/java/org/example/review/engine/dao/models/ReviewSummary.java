@@ -1,26 +1,30 @@
-package org.example.review.engine.models;
+package org.example.review.engine.dao.models;
 
-import lombok.AllArgsConstructor;
+import jakarta.persistence.*;
 
-import java.io.File;
-import java.util.HashMap;
-
-@AllArgsConstructor
+@Entity
+@Table(name = "review_summary", indexes = {
+        @Index(name = "idx_review_summary_product_id", columnList = "product_id")
+})
 public class ReviewSummary {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    @Column(name = "product_id")
     private Long productId;
+    @Column(name = "overall_rating")
     private Float overallRating;
+    @Column(name = "total_reviews")
     private Long totalReviews;
-//    private HashMap<String, Double> categoryRating;
+
+    //    private HashMap<String, Double> categoryRating;
+    @Column(name = "review_region")
     private String reviewRegion; // Optional since user region is already stored. Can be used to calculate rating
     private int upvotes;
     private int downvotes;
 
-    public Long getTotalReviews() {
-        return totalReviews;
-    }
-
-    public void setTotalReviews(Long totalReviews) {
-        this.totalReviews = totalReviews;
+    public Long getId() {
+        return id;
     }
 
     public Long getProductId() {
@@ -31,9 +35,9 @@ public class ReviewSummary {
         return overallRating;
     }
 
-//    public HashMap<String, Double> getCategoryRating() {
-//        return categoryRating;
-//    }
+    public Long getTotalReviews() {
+        return totalReviews;
+    }
 
     public String getReviewRegion() {
         return reviewRegion;
@@ -47,6 +51,10 @@ public class ReviewSummary {
         return downvotes;
     }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public void setProductId(Long productId) {
         this.productId = productId;
     }
@@ -55,9 +63,9 @@ public class ReviewSummary {
         this.overallRating = overallRating;
     }
 
-//    public void setCategoryRating(HashMap<String, Double> categoryRating) {
-//        this.categoryRating = categoryRating;
-//    }
+    public void setTotalReviews(Long totalReviews) {
+        this.totalReviews = totalReviews;
+    }
 
     public void setReviewRegion(String reviewRegion) {
         this.reviewRegion = reviewRegion;

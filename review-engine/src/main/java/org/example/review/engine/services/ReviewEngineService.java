@@ -1,73 +1,87 @@
 package org.example.review.engine.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.review.engine.dao.*;
+import org.example.review.engine.dao.models.Reviews;
+import org.example.review.engine.mappers.ReviewSummaryMappers;
+import org.example.review.engine.mappers.ReviewsMappers;
 import org.example.review.engine.models.Product;
-import org.example.review.engine.dao.ProductReviewDao;
-import org.example.review.engine.dao.ReviewDao;
-import org.example.review.engine.dao.UserReviewDao;
 import org.example.review.engine.models.Review;
 import org.example.review.engine.models.ReviewSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import io.netty.resolver.dns.macos.*;
-import reactor.core.publisher.Mono;
-import reactor.util.retry.Retry;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+
+import static org.example.review.engine.constants.Endpoints.productServiceEndpoint;
 
 @Service
 public class ReviewEngineService {
 
     static final Logger logger = LoggerFactory.getLogger(String.valueOf(ReviewEngineService.class));
-    private final ReviewDao reviewDao;
     private final UserReviewDao userReviewDao;
-    private final ProductReviewDao productReviewDao;
 
     private final ReviewCalculator reviewCalculator;
 
-    public ReviewEngineService(ReviewDao reviewDao, UserReviewDao userReviewDao, ProductReviewDao productReviewDao, ReviewCalculator reviewCalculator) {
-        this.reviewDao = reviewDao;
+    private final ReviewsDao reviewsDao;
+
+    private final ReviewSummaryDao reviewSummaryDao;
+
+    private final ReviewsMappers reviewsMappers;
+    private final ReviewSummaryMappers reviewSummaryMappers;
+
+    public ReviewEngineService(UserReviewDao userReviewDao, ProductReviewDao productReviewDao, ReviewCalculator reviewCalculator, ReviewsDao reviewsDao, ReviewSummaryDao reviewSummaryDao, ReviewsMappers reviewsMappers, ReviewSummaryMappers reviewSummaryMappers) {
         this.userReviewDao = userReviewDao;
-        this.productReviewDao = productReviewDao;
         this.reviewCalculator = reviewCalculator;
+        this.reviewsDao = reviewsDao;
+        this.reviewSummaryDao = reviewSummaryDao;
+        this.reviewsMappers = reviewsMappers;
+        this.reviewSummaryMappers = reviewSummaryMappers;
     }
 
     public List<Review> getReviewsForProduct(Long productId) {
         /**
-         * TODO
-         * get review from cache else DB
+         * TODO: get review from cache else DB
          */
-        return productReviewDao.getReviewsForProduct(productId);
+        logger.info(reviewsDao.findByProductId(productId).toString());
+        List<Reviews> reviews = reviewsDao.findByProductId(productId);
+        List<Review> response = new ArrayList<>();
+        for (Reviews review: reviews) {
+            response.add(reviewsMappers.reviewsDaoModelToReviewModel(review));
+        }
+        return response;
     }
 
     public String addReview(Review review) {
         try {
-            /**
-             * TODO
-             * 1. Add review in reviews table
-             * 2. get product details from product module
-             * 3. call reviewCalculator to calculate review
-             * 4. Store review
-             * 5. refresh cache
-             */
-            String reviewId = UUID.randomUUID().toString();
-            review.setId(reviewId);
-            productReviewDao.addProductReview(review);
-            reviewDao.addReview(review);
-            userReviewDao.addReview(review);
             Long productId = review.getProductId();
 
-            // TODO call product module to get product details
+            logger.info("Adding review for product " + review.getProductId()+ " by " + review.getUserEmailId() + " :"  +review);
+
+            try {
+                logger.info("Review received " + review.toString());
+                logger.info("Review received " + review.getProductId());
+                Reviews reviewsRecord = reviewsMappers.reviewToReviewsDaoModel(review);
+                logger.info("Review record " + reviewsRecord);
+
+                reviewsDao.save(reviewsRecord);
+                logger.info("Review added in db " + reviewsRecord);
+            } catch (Exception exx) {
+                logger.error("Exception in adding entry to the db due to " + exx.getMessage());
+                throw exx;
+            }
+
+            // call product module to get product details
             Product product = null;
             try {
 
                 logger.info("Trying to connect to product service");
+                String productServiceEndpointUri = productServiceEndpoint;
 
                 WebClient webClient = WebClient.builder().build();
-
                 String productResponseString = webClient.get()
                         .uri("http://localhost:8082/product/v1/" + productId)
                         .retrieve()
@@ -77,20 +91,18 @@ public class ReviewEngineService {
 
                 ObjectMapper objectMapper = new ObjectMapper();
                 product = objectMapper.readValue(productResponseString, Product.class);
-
                 logger.info("Product is " + product);
-                logger.info("Product name is " + product.getName());
 
             } catch (Exception ex) {
                 logger.info("Failed to get product with id " + productId + "due to " + ex.getMessage());
             }
 
-            ReviewSummary reviewSummary = productReviewDao.getProductReviewSummary(productId);
+            org.example.review.engine.dao.models.ReviewSummary reviewSummary = reviewSummaryDao.findByProductId(productId);
             if (reviewSummary == null) {
-                productReviewDao.addFirstReviewSummary(product, review);
+                addFirstReviewSummary(review);
             } else {
-                ReviewSummary revisedReviewSummary = reviewCalculator.calculateReview(product, review, reviewSummary);
-                productReviewDao.addOrUpdateProductReviewSummary(productId, revisedReviewSummary);
+                org.example.review.engine.dao.models.ReviewSummary revisedReviewSummary = reviewCalculator.calculateReview(product, review, reviewSummary);
+                reviewSummaryDao.save(reviewSummary);
             }
             // TODO: Refresh Cache with this value
             return "Thank you for your review!";
@@ -100,10 +112,20 @@ public class ReviewEngineService {
         }
     }
 
+    private org.example.review.engine.dao.models.ReviewSummary addFirstReviewSummary(Review review) {
+        org.example.review.engine.dao.models.ReviewSummary reviewSummary = new org.example.review.engine.dao.models.ReviewSummary();
+        reviewSummary.setProductId(review.getProductId());
+        reviewSummary.setTotalReviews(1L);
+        reviewSummary.setReviewRegion(review.getReviewRegion());
+        reviewSummary.setOverallRating(review.getOverallRating());
+        reviewSummaryDao.save(reviewSummary);
+        return reviewSummary;
+    }
+
     public String updateProductReview(String reviewId, Review updatedReview) {
         try {
-            reviewDao.updateReview(reviewId, updatedReview);
-            productReviewDao.updateReview(reviewId, updatedReview);
+            Reviews reviewsRecord = reviewsMappers.reviewToReviewsDaoModel(updatedReview);
+            reviewsDao.save(reviewsRecord);
             return "Thank you for your review!";
         } catch (Exception ex) {
             return "Something went wrong. Please try again!";
@@ -116,6 +138,16 @@ public class ReviewEngineService {
     }
 
     public ReviewSummary getReviewSummaryForProduct(Long productId) {
-        return productReviewDao.getProductReviewSummary(productId);
+        org.example.review.engine.dao.models.ReviewSummary reviewSummaryRecord = reviewSummaryDao.findByProductId(productId);
+        return reviewSummaryMappers.reviewSummaryRecordToReviewSummaryModel(reviewSummaryRecord);
+    }
+
+    public List<Review> getAllReviews() {
+        List<Reviews> reviewRecords = reviewsDao.findAll();
+        List<Review> reviewList = new ArrayList<>();
+        for (Reviews review: reviewRecords) {
+            reviewList.add(reviewsMappers.reviewsDaoModelToReviewModel(review));
+        }
+        return reviewList;
     }
 }

@@ -51,7 +51,7 @@ public class ReviewEngineController {
             consumes = {MediaType.APPLICATION_JSON_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseBody
-    ResponseEntity<String> updateProduct(
+    ResponseEntity<String> updateReview(
             @PathVariable("reviewId") final String reviewId,
             @RequestBody Review request) {
         try {
@@ -82,6 +82,15 @@ public class ReviewEngineController {
             @PathVariable("productId") final Long productId
     ) {
         return ResponseEntity.ok(reviewEngineService.getReviewSummaryForProduct(productId));
+    }
+
+    @RequestMapping(
+            value = "all",
+            method = RequestMethod.GET,
+            produces = {MediaType.APPLICATION_JSON_VALUE})
+    @ResponseBody
+    ResponseEntity<List<Review>> getAllReviews() {
+        return ResponseEntity.ok(reviewEngineService.getAllReviews());
     }
 
     // TODO: Add upvotes and downvotes to reviews

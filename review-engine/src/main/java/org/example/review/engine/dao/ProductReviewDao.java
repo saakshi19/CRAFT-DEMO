@@ -51,7 +51,7 @@ public class ProductReviewDao {
                 review.getProductId(),
                 review.getOverallRating(),
                 1L,
-                null,
+//                null,
                 review.getReviewRegion(),
                 0,
                 0

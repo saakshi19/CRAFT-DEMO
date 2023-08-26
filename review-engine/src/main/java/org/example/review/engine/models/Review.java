@@ -7,22 +7,26 @@ import java.util.HashMap;
 
 @AllArgsConstructor
 public class Review {
-    private String id; // Random UUID
+    private Long id; // Random UUID
     private Long productId;
     private String userEmailId;
     private String textContent;
     private File fileContext;
-    private Double overallRating;
+    private float overallRating;
     private HashMap<String, Double> categoryRating;
     private String reviewRegion; // Optional since user region is already stored. Can be used to calculate rating
     private int upvotes;
     private int downvotes;
 
-    public String getId() {
+    public Review() {
+
+    }
+
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -54,7 +58,7 @@ public class Review {
         return fileContext;
     }
 
-    public Double getOverallRating() {
+    public float getOverallRating() {
         return overallRating;
     }
 
@@ -79,7 +83,7 @@ public class Review {
         this.fileContext = fileContext;
     }
 
-    public void setOverallRating(Double overallRating) {
+    public void setOverallRating(Float overallRating) {
         this.overallRating = overallRating;
     }
 

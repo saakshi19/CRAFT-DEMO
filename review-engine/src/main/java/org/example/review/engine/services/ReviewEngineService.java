@@ -22,9 +22,7 @@ import static org.example.review.engine.constants.Endpoints.productServiceEndpoi
 public class ReviewEngineService {
 
     static final Logger logger = LoggerFactory.getLogger(String.valueOf(ReviewEngineService.class));
-    private final ReviewDao reviewDao;
     private final UserReviewDao userReviewDao;
-    private final ProductReviewDao productReviewDao;
 
     private final ReviewCalculator reviewCalculator;
 
@@ -35,10 +33,8 @@ public class ReviewEngineService {
     private final ReviewsMappers reviewsMappers;
     private final ReviewSummaryMappers reviewSummaryMappers;
 
-    public ReviewEngineService(ReviewDao reviewDao, UserReviewDao userReviewDao, ProductReviewDao productReviewDao, ReviewCalculator reviewCalculator, ReviewsDao reviewsDao, ReviewSummaryDao reviewSummaryDao, ReviewsMappers reviewsMappers, ReviewSummaryMappers reviewSummaryMappers) {
-        this.reviewDao = reviewDao;
+    public ReviewEngineService(UserReviewDao userReviewDao, ProductReviewDao productReviewDao, ReviewCalculator reviewCalculator, ReviewsDao reviewsDao, ReviewSummaryDao reviewSummaryDao, ReviewsMappers reviewsMappers, ReviewSummaryMappers reviewSummaryMappers) {
         this.userReviewDao = userReviewDao;
-        this.productReviewDao = productReviewDao;
         this.reviewCalculator = reviewCalculator;
         this.reviewsDao = reviewsDao;
         this.reviewSummaryDao = reviewSummaryDao;
@@ -61,21 +57,15 @@ public class ReviewEngineService {
 
     public String addReview(Review review) {
         try {
-//            String reviewId = UUID.randomUUID().toString();
-//            review.setId(reviewId);
-//            productReviewDao.addProductReview(review);
-//            reviewDao.addReview(review);
-//            userReviewDao.addReview(review);
             Long productId = review.getProductId();
 
             logger.info("Adding review for product " + review.getProductId()+ " by " + review.getUserEmailId() + " :"  +review);
 
             try {
-                Reviews reviewsRecord = reviewsMappers.reviewToReviewsDaoModel(review); // new Reviews();
-//                reviewsRecord.setProduct_id(productId);
-//                reviewsRecord.setUser_email_id(review.getUserEmailId());
-//                reviewsRecord.setRating((review.getOverallRating()));
-//                reviewsRecord.setMetadata(review.getTextContent());
+                logger.info("Review received " + review.toString());
+                logger.info("Review received " + review.getProductId());
+                Reviews reviewsRecord = reviewsMappers.reviewToReviewsDaoModel(review);
+                logger.info("Review record " + reviewsRecord);
 
                 reviewsDao.save(reviewsRecord);
                 logger.info("Review added in db " + reviewsRecord);
@@ -89,11 +79,9 @@ public class ReviewEngineService {
             try {
 
                 logger.info("Trying to connect to product service");
-
-                WebClient webClient = WebClient.builder().build();
-
                 String productServiceEndpointUri = productServiceEndpoint;
 
+                WebClient webClient = WebClient.builder().build();
                 String productResponseString = webClient.get()
                         .uri("http://localhost:8082/product/v1/" + productId)
                         .retrieve()
@@ -109,15 +97,12 @@ public class ReviewEngineService {
                 logger.info("Failed to get product with id " + productId + "due to " + ex.getMessage());
             }
 
-//            ReviewSummary reviewSummary1 = productReviewDao.getProductReviewSummary(productId);
             org.example.review.engine.dao.models.ReviewSummary reviewSummary = reviewSummaryDao.findByProductId(productId);
             if (reviewSummary == null) {
                 addFirstReviewSummary(review);
-//                productReviewDao.addFirstReviewSummary(product, review);
             } else {
                 org.example.review.engine.dao.models.ReviewSummary revisedReviewSummary = reviewCalculator.calculateReview(product, review, reviewSummary);
                 reviewSummaryDao.save(reviewSummary);
-//                productReviewDao.addOrUpdateProductReviewSummary(productId, revisedReviewSummary);
             }
             // TODO: Refresh Cache with this value
             return "Thank you for your review!";
@@ -139,8 +124,6 @@ public class ReviewEngineService {
 
     public String updateProductReview(String reviewId, Review updatedReview) {
         try {
-//            reviewDao.updateReview(reviewId, updatedReview);
-//            productReviewDao.updateReview(reviewId, updatedReview);
             Reviews reviewsRecord = reviewsMappers.reviewToReviewsDaoModel(updatedReview);
             reviewsDao.save(reviewsRecord);
             return "Thank you for your review!";
@@ -157,7 +140,6 @@ public class ReviewEngineService {
     public ReviewSummary getReviewSummaryForProduct(Long productId) {
         org.example.review.engine.dao.models.ReviewSummary reviewSummaryRecord = reviewSummaryDao.findByProductId(productId);
         return reviewSummaryMappers.reviewSummaryRecordToReviewSummaryModel(reviewSummaryRecord);
-//        return productReviewDao.getProductReviewSummary(productId);
     }
 
     public List<Review> getAllReviews() {

@@ -3,7 +3,6 @@ package org.example.review.engine.services;
 import org.example.review.engine.dao.models.ReviewSummary;
 import org.example.review.engine.models.Product;
 import org.example.review.engine.models.Review;
-//import org.example.review.engine.models.ReviewSummary;
 import org.springframework.stereotype.Service;
 
 @Service

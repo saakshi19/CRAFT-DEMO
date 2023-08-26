@@ -5,7 +5,6 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class ReviewSummaryMappers {
-
     public ReviewSummary reviewSummaryRecordToReviewSummaryModel(org.example.review.engine.dao.models.ReviewSummary reviewSummaryRecord){
         return new ReviewSummary(
                 reviewSummaryRecord.getProductId(),
